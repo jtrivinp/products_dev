@@ -37,7 +37,7 @@ class MainWindow(ttk.Frame):
         threading.Thread(target=self.worker,args=(Path(self.file.get()),),daemon=True).start()
     def worker(self, source):
         try: result=run(self.settings,self.mode.get(),source); self.root.after(0,lambda:self.done(result))
-        except Exception as exc: self.root.after(0,lambda:self.failed(exc))
+        except Exception as exc: self.root.after(0, lambda exc=exc: self.failed(exc))
     def done(self,result):
         stats,output,report,log=result; self.last_output=output; self.last_report=report; self.status.set(f"Proceso terminado: {stats['groups']} grupos y {stats['proposed_rows']} partidas. Resultado: {output}"); self.process_button.configure(state="normal"); self.open_button.configure(state="normal"); self.report_button.configure(state="normal")
     def failed(self,exc): self.status.set("No se pudo completar el proceso. Consulte el log técnico."); self.process_button.configure(state="normal"); messagebox.showerror("Error de procesamiento",str(exc))

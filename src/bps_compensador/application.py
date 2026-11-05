@@ -15,7 +15,7 @@ def candidates(directory: Path) -> list[Path]: return sorted(p for p in director
 
 def run(settings: Settings, mode: str, source: Path) -> tuple[dict, Path, Path, Path]:
     validate(settings)
-    if source.parent != settings.input_dir or not source.is_file(): raise ValueError("El fichero seleccionado no pertenece al directorio de entrada configurado.")
+    if not source.is_file(): raise ValueError("No se encuentra el fichero Excel seleccionado.")
     if mode == "retencion" and not settings.auxiliary(settings.retentions_file).is_file():
         raise ValueError(f"No se encuentra la tabla de retenciones: {settings.auxiliary(settings.retentions_file)}")
     if mode == "masmenos" and not settings.auxiliary(settings.classes_file).is_file():
