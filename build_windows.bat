@@ -22,6 +22,10 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
+if not exist "dist\BPS_Compensador\config\config.ini" (
+  xcopy /E /I /Y "config" "dist\BPS_Compensador\config" >nul
+)
+for %%D in (input output logs) do if not exist "dist\BPS_Compensador\%%D" mkdir "dist\BPS_Compensador\%%D"
 echo.
 echo Build terminado: dist\BPS_Compensador\BPS_Compensador.exe
 echo Mantenga config, input, output y logs junto a la carpeta del ejecutable.
