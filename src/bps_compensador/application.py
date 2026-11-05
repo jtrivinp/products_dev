@@ -7,12 +7,13 @@ from . import __version__
 from .engine import process
 from .logging_config import configure
 from .settings import Settings, validate
+from .html_report import generate
 
 MODE_LABELS = {"retencion": "0 - Retención", "domiciliadas": "1 - Domiciliadas", "masmenos": "2 - Más/Menos"}
 
 def candidates(directory: Path) -> list[Path]: return sorted(p for p in directory.iterdir() if p.is_file() and p.suffix.lower() in {".xlsx", ".xlsm"} and not p.name.startswith("~$"))
 
-def run(settings: Settings, mode: str, source: Path) -> tuple[dict, Path, Path]:
+def run(settings: Settings, mode: str, source: Path) -> tuple[dict, Path, Path, Path]:
     validate(settings)
     if source.parent != settings.input_dir or not source.is_file(): raise ValueError("El fichero seleccionado no pertenece al directorio de entrada configurado.")
     if mode == "retencion" and not settings.auxiliary(settings.retentions_file).is_file():
@@ -30,8 +31,9 @@ def run(settings: Settings, mode: str, source: Path) -> tuple[dict, Path, Path]:
             stats = process("domiciliados", source, output, clase_pago_domiciliado=payment_class, tolerancia_centimos=settings.tolerance_cents, max_facturas_domiciliado=settings.max_invoices)
         elif mode == "masmenos": stats = process("masmenos", source, output, clases=settings.auxiliary(settings.classes_file))
         else: raise ValueError(f"Modo no reconocido: {mode}")
-        logger.info("Fin correcto: partidas=%s grupos=%s salida=%s", stats["proposed_rows"], stats["groups"], output)
-        return stats, output, settings.log_dir / f"bps_{run_id}.log"
+        report = generate(output, output_dir / "resultado.html", MODE_LABELS[mode], source.name, stats)
+        logger.info("Fin correcto: partidas=%s grupos=%s salida=%s informe=%s", stats["proposed_rows"], stats["groups"], output, report)
+        return stats, output, report, settings.log_dir / f"bps_{run_id}.log"
     except Exception:
         logger.exception("Error de ejecución"); raise
 

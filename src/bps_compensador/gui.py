@@ -20,8 +20,9 @@ class MainWindow(ttk.Frame):
         self.process_button=ttk.Button(self,text="Procesar",command=self.start); self.process_button.grid(row=5,column=0,sticky="w",pady=14)
         ttk.Label(self,textvariable=self.status,wraplength=700).grid(row=6,column=0,sticky="w")
         actions=ttk.Frame(self); actions.grid(row=7,column=0,sticky="w",pady=(12,0))
-        self.open_button=ttk.Button(actions,text="Abrir último resultado",command=self.open_output,state="disabled"); self.open_button.grid(row=0,column=0)
-        ttk.Button(actions,text="Abrir carpeta de salida",command=self.open_folder).grid(row=0,column=1,padx=(8,0))
+        self.open_button=ttk.Button(actions,text="Abrir último Excel",command=self.open_output,state="disabled"); self.open_button.grid(row=0,column=0)
+        self.report_button=ttk.Button(actions,text="Abrir visor",command=self.open_report,state="disabled"); self.report_button.grid(row=0,column=1,padx=(8,0))
+        ttk.Button(actions,text="Abrir carpeta de salida",command=self.open_folder).grid(row=0,column=2,padx=(8,0))
         self.refresh_candidates()
     def refresh_candidates(self):
         files=candidates(self.settings.input_dir) if self.settings.input_dir.is_dir() else []
@@ -38,10 +39,12 @@ class MainWindow(ttk.Frame):
         try: result=run(self.settings,self.mode.get(),source); self.root.after(0,lambda:self.done(result))
         except Exception as exc: self.root.after(0,lambda:self.failed(exc))
     def done(self,result):
-        stats,output,log=result; self.last_output=output; self.status.set(f"Proceso terminado: {stats['groups']} grupos y {stats['proposed_rows']} partidas. Resultado: {output}"); self.process_button.configure(state="normal"); self.open_button.configure(state="normal")
+        stats,output,report,log=result; self.last_output=output; self.last_report=report; self.status.set(f"Proceso terminado: {stats['groups']} grupos y {stats['proposed_rows']} partidas. Resultado: {output}"); self.process_button.configure(state="normal"); self.open_button.configure(state="normal"); self.report_button.configure(state="normal")
     def failed(self,exc): self.status.set("No se pudo completar el proceso. Consulte el log técnico."); self.process_button.configure(state="normal"); messagebox.showerror("Error de procesamiento",str(exc))
     def open_output(self):
         if self.last_output: os.startfile(self.last_output) if os.name=="nt" else None
+    def open_report(self):
+        if getattr(self,"last_report",None) and os.name=="nt": os.startfile(self.last_report)
     def open_folder(self):
         if os.name == "nt": os.startfile(self.settings.output_dir)
 def main():
