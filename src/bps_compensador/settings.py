@@ -3,6 +3,7 @@ from __future__ import annotations
 from configparser import ConfigParser
 from dataclasses import dataclass
 from pathlib import Path
+import sys
 
 @dataclass(frozen=True)
 class Settings:
@@ -13,7 +14,7 @@ class Settings:
     def auxiliary(self, filename: str) -> Path: return self.aux_dir / filename
 
 def load(path: Path | None = None) -> Settings:
-    root = (path.parent.parent if path else Path(__file__).resolve().parents[2])
+    root = path.parent.parent if path else (Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parents[2])
     filename = path or root / "config" / "config.ini"
     parser = ConfigParser(); loaded = parser.read(filename, encoding="utf-8")
     if not loaded: raise ValueError(f"No se encuentra el archivo de configuración: {filename}")
