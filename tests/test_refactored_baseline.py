@@ -12,10 +12,11 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from bps_compensador.engine import process
 
-DATA_DIR = Path(os.environ.get("BPS_TEST_DATA_DIR", ""))
+_data_dir = os.environ.get("BPS_TEST_DATA_DIR")
+DATA_DIR = Path(_data_dir) if _data_dir else None
 
 
-@unittest.skipUnless(DATA_DIR.is_dir(), "Defina BPS_TEST_DATA_DIR con los Excel de baseline")
+@unittest.skipUnless(DATA_DIR and DATA_DIR.is_dir(), "Defina BPS_TEST_DATA_DIR con los Excel de baseline")
 class RefactoredBaselineTests(unittest.TestCase):
     def test_all_supported_datasets_keep_legacy_counts(self):
         cases = [

@@ -13,7 +13,8 @@ import unittest
 from pathlib import Path
 
 
-DATA_DIR = Path(os.environ.get("BPS_TEST_DATA_DIR", ""))
+_data_dir = os.environ.get("BPS_TEST_DATA_DIR")
+DATA_DIR = Path(_data_dir) if _data_dir else None
 SOURCE = (
     Path(__file__).resolve().parents[1]
     / "src"
@@ -30,7 +31,7 @@ def load_prototype():
     return module
 
 
-@unittest.skipUnless(DATA_DIR.is_dir(), "Defina BPS_TEST_DATA_DIR con los Excel de baseline")
+@unittest.skipUnless(DATA_DIR and DATA_DIR.is_dir(), "Defina BPS_TEST_DATA_DIR con los Excel de baseline")
 class BaselineRegressionTests(unittest.TestCase):
     """Congela el comportamiento observado antes del refactor funcional."""
 
