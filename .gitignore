@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# Datos contables, ejecuciones y resultados
+*.xlsx
+*.xls
+output/
+logs/
+baseline/
+
+# Empaquetado Windows
+build/
+dist/
+*.spec
