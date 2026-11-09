@@ -12,7 +12,7 @@ from ..common import (COL_ASIGNACION, COL_BASE_RET, COL_DOCUMENTO, COL_FECHA_CON
                       load_retention_table, norm_text, write_matches)
 
 
-def process(input_path: Path, retention_path: Path, output_path: Path, day_window: int = 31) -> dict:
+def process(input_path: Path, retention_path: Path, output_path: Path, day_window: int = 31, tolerance_cents: int = 12) -> dict:
     rates = load_retention_table(retention_path)
     workbook = load_workbook(input_path)
     ws = workbook[workbook.sheetnames[0]]
@@ -72,6 +72,22 @@ def process(input_path: Path, retention_path: Path, output_path: Path, day_windo
                 assign([first, second], "R02_1A1_RETENCION" if retained else "R02_1A1_EXACTO", "Importes efectivos opuestos" + ("; incluye ajuste por retencion parametrizada" if retained else ""), "CMP-RET" if retained else "CMP")
                 positive.remove(first); negative.remove(second)
 
+    # Casos 1:1 dentro de la tolerancia funcional confirmada.
+    if tolerance_cents:
+        buckets = defaultdict(list)
+        for row in candidates:
+            if row not in assigned: buckets[(rows[row]["soc"], rows[row]["acc"])].append(row)
+        for group in buckets.values():
+            positive = [row for row in group if cents(rows[row]["effective"]) > 0]
+            negative = [row for row in group if cents(rows[row]["effective"]) < 0]
+            while positive and negative:
+                options = [(abs(cents(rows[p]["effective"]) + cents(rows[n]["effective"])), date_distance(rows[p]["date"], rows[n]["date"]), p, n) for p in positive for n in negative if abs(cents(rows[p]["effective"]) + cents(rows[n]["effective"])) <= tolerance_cents]
+                if not options: break
+                _, _, first, second = min(options)
+                retained = rows[first]["has_retention"] or rows[second]["has_retention"]
+                assign([first, second], "R02_1A1_RETENCION" if retained else "R02_1A1_EXACTO", "Importes efectivos opuestos dentro de tolerancia", "CMP-RET" if retained else "CMP")
+                positive.remove(first); negative.remove(second)
+
     buckets = defaultdict(list)
     for row in candidates:
         if row not in assigned: buckets[(rows[row]["soc"], rows[row]["acc"])].append(row)
@@ -87,6 +103,12 @@ def process(input_path: Path, retention_path: Path, output_path: Path, day_windo
                 seen[value] = row
             if found:
                 assign(found, "R03_1A2", f"Una partida cuadra con dos contrapartidas; ventana <= {day_window} dias", "CMP-1N")
+
+            if not found and tolerance_cents:
+                pairs = [(abs(cents(rows[target]["effective"]) + cents(rows[a]["effective"]) + cents(rows[b]["effective"])), a, b) for i, a in enumerate(others) for b in others[i + 1:] if abs(cents(rows[target]["effective"]) + cents(rows[a]["effective"]) + cents(rows[b]["effective"])) <= tolerance_cents]
+                if pairs:
+                    _, first, second = min(pairs)
+                    assign([target, first, second], "R03_1A2", f"Una partida cuadra con dos contrapartidas dentro de tolerancia; ventana <= {day_window} dias", "CMP-1N")
 
     write_matches(ws, headers, rows, assigned, match_type, reason, difference)
     for row, item in rows.items():

@@ -25,7 +25,7 @@ def run(settings: Settings, mode: str, source: Path) -> tuple[dict, Path, Path, 
     output = output_dir / "resultado.xlsx"; logger.info("Inicio %s; versión %s; entrada=%s", mode, __version__, source.name)
     try:
         if mode == "retencion":
-            stats = process("abiertas", source, output, retenciones=settings.auxiliary(settings.retentions_file), ventana_dias=settings.day_window)
+            stats = process("abiertas", source, output, retenciones=settings.auxiliary(settings.retentions_file), ventana_dias=settings.day_window, tolerancia_retencion_centimos=settings.retention_tolerance_cents)
         elif mode == "domiciliadas":
             payment_class = settings.gpc_class if "Cuenta" in _headers(source) else settings.vip_class
             stats = process("domiciliados", source, output, clase_pago_domiciliado=payment_class, tolerancia_centimos=settings.tolerance_cents, max_facturas_domiciliado=settings.max_invoices)
