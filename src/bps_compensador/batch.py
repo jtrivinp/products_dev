@@ -43,7 +43,8 @@ def run_batch(settings, logger):
                         proposals[number]={key: values[h[key]-1] if key in h else None for key in HELPERS}
             for number, values in enumerate(base_ws.iter_rows(min_row=2,values_only=True),2):
                 item=dict(zip(base_headers,values)); item.update({"FICHERO_ORIGEN":source.name,"SISTEMA_ORIGEN":system}); item.update(proposals.get(number,{})); rows.append(item)
-            shutil.move(str(source), str(processed/source.name))
+            archived = processed / f"{source.stem}_{run_id}{source.suffix}"
+            shutil.move(str(source), str(archived))
     out=Workbook(); ws=out.active; ws.title="RESULTADOS_CONSOLIDADOS"; ordered=["FICHERO_ORIGEN","SISTEMA_ORIGEN"]+sorted(columns-{"FICHERO_ORIGEN","SISTEMA_ORIGEN"})+HELPERS
     ordered=list(dict.fromkeys(ordered)); ws.append(ordered)
     for item in rows: ws.append([item.get(col) for col in ordered])
