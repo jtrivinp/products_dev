@@ -19,11 +19,11 @@ def run_batch(settings, logger):
     files=pending_files(settings.input_dir)
     if not files: raise ValueError("No hay ficheros Excel pendientes en la carpeta de entrada.")
     run_id=datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_dir=settings.output_dir / run_id; output_dir.mkdir(parents=True,exist_ok=False)
+    output_dir=settings.output_dir / run_id
     processed=settings.input_dir / "procesados"; processed.mkdir(exist_ok=True)
     rows=[]; columns={"FICHERO_ORIGEN","SISTEMA_ORIGEN"}; total_groups=0
-    with tempfile.TemporaryDirectory(prefix="bps-lote-") as temp:
-        temp=Path(temp)
+    temp=Path(tempfile.mkdtemp(prefix="bps-lote-")); staged=temp / "entrega"; staged.mkdir()
+    try:
         for file_index, source in enumerate(files,1):
             wb=load_workbook(source,read_only=True); headers=header_map(wb[wb.sheetnames[0]]); system=detect_system(headers); wb.close()
             logger.info("Procesando %s (%s)",source.name,system)
@@ -45,12 +45,17 @@ def run_batch(settings, logger):
             for number, values in enumerate(base_ws.iter_rows(min_row=2,values_only=True),2):
                 item=dict(zip(base_headers,values)); item.update({"FICHERO_ORIGEN":source.name,"SISTEMA_ORIGEN":system}); item.update(proposals.get(number,{})); rows.append(item)
             base.close()
+        out=Workbook(); ws=out.active; ws.title="RESULTADOS_CONSOLIDADOS"; ordered=["FICHERO_ORIGEN","SISTEMA_ORIGEN"]+sorted(columns-{"FICHERO_ORIGEN","SISTEMA_ORIGEN"})+HELPERS
+        ordered=list(dict.fromkeys(ordered)); ws.append(ordered)
+        for item in rows: ws.append([item.get(col) for col in ordered])
+        excel=staged/f"Compensacion_{run_id}.xlsx"; out.save(excel); out.close()
+        proposed=sum(1 for item in rows if item.get(OUT_CODIGO)); stats={"rows":len(rows),"proposed_rows":proposed,"groups":total_groups}
+        html=generate(excel,staged/f"Compensacion_{run_id}.html","Ejecución consolidada",f"{len(files)} fichero(s)",stats)
+        for source in files:
             archived = processed / f"{source.stem}_{run_id}{source.suffix}"
             shutil.move(str(source), str(archived))
-    out=Workbook(); ws=out.active; ws.title="RESULTADOS_CONSOLIDADOS"; ordered=["FICHERO_ORIGEN","SISTEMA_ORIGEN"]+sorted(columns-{"FICHERO_ORIGEN","SISTEMA_ORIGEN"})+HELPERS
-    ordered=list(dict.fromkeys(ordered)); ws.append(ordered)
-    for item in rows: ws.append([item.get(col) for col in ordered])
-    excel=output_dir/f"Compensacion_{run_id}.xlsx"; out.save(excel)
-    proposed=sum(1 for item in rows if item.get(OUT_CODIGO)); stats={"rows":len(rows),"proposed_rows":proposed,"groups":total_groups}
-    html=generate(excel,output_dir/f"Compensacion_{run_id}.html","Ejecución consolidada",f"{len(files)} fichero(s)",stats)
-    return stats,excel,html,len(files)
+        shutil.move(str(staged), str(output_dir))
+        excel=output_dir / excel.name; html=output_dir / html.name
+        return stats,excel,html,len(files)
+    finally:
+        shutil.rmtree(temp, ignore_errors=True)
