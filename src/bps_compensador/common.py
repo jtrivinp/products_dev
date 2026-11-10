@@ -147,7 +147,9 @@ def load_retention_table(path: Path) -> Dict[str, float]:
         if not 0 <= rate <= 1:
             raise ValueError(f"Fila {row}: porcentaje invalido para {code}: {pct}")
         if code in result:
-            raise ValueError(f"Codigo de retencion duplicado: {code}")
+            if result[code] != rate:
+                raise ValueError(f"Código de retención duplicado con porcentajes distintos: {code} ({result[code]:.2%} y {rate:.2%})")
+            continue
         result[code] = rate
     return result
 

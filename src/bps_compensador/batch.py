@@ -50,7 +50,7 @@ def run_batch(settings, logger):
     out=Workbook(); ws=out.active; ws.title="RESULTADOS_CONSOLIDADOS"; ordered=["FICHERO_ORIGEN","SISTEMA_ORIGEN"]+sorted(columns-{"FICHERO_ORIGEN","SISTEMA_ORIGEN"})+HELPERS
     ordered=list(dict.fromkeys(ordered)); ws.append(ordered)
     for item in rows: ws.append([item.get(col) for col in ordered])
-    excel=output_dir/f"BPS_Compensacion_{run_id}.xlsx"; out.save(excel)
+    excel=output_dir/f"Compensacion_{run_id}.xlsx"; out.save(excel)
     proposed=sum(1 for item in rows if item.get(OUT_CODIGO)); stats={"rows":len(rows),"proposed_rows":proposed,"groups":total_groups}
-    html=generate(excel,output_dir/f"BPS_Compensacion_{run_id}.html","Ejecución consolidada",f"{len(files)} fichero(s)",stats)
+    html=generate(excel,output_dir/f"Compensacion_{run_id}.html","Ejecución consolidada",f"{len(files)} fichero(s)",stats)
     return stats,excel,html,len(files)
