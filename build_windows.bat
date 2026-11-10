@@ -16,15 +16,23 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
+set "CONFIG_BACKUP=%TEMP%\BPS_Compensador_config_backup"
+if exist "%CONFIG_BACKUP%" rmdir /S /Q "%CONFIG_BACKUP%"
+if exist "dist\BPS_Compensador\config" xcopy /E /I /Y "dist\BPS_Compensador\config" "%CONFIG_BACKUP%" >nul
 python -m PyInstaller --noconfirm --clean --windowed --name BPS_Compensador --paths src src\bps_compensador\main.py
 if errorlevel 1 (
   echo ERROR: El empaquetado no ha terminado correctamente.
   pause
   exit /b 1
 )
-if not exist "dist\BPS_Compensador\config" mkdir "dist\BPS_Compensador\config"
-if not exist "dist\BPS_Compensador\config\config.ini" copy /Y "config\config.ini" "dist\BPS_Compensador\config\config.ini" >nul
-if exist "config\auxiliares" xcopy /E /I /Y "config\auxiliares" "dist\BPS_Compensador\config\auxiliares" >nul
+if exist "%CONFIG_BACKUP%\config.ini" (
+  xcopy /E /I /Y "%CONFIG_BACKUP%" "dist\BPS_Compensador\config" >nul
+) else (
+  if not exist "dist\BPS_Compensador\config" mkdir "dist\BPS_Compensador\config"
+  copy /Y "config\config.ini" "dist\BPS_Compensador\config\config.ini" >nul
+  if exist "config\auxiliares" xcopy /E /I /Y "config\auxiliares" "dist\BPS_Compensador\config\auxiliares" >nul
+)
+if exist "%CONFIG_BACKUP%" rmdir /S /Q "%CONFIG_BACKUP%"
 for %%D in (input output logs) do if not exist "dist\BPS_Compensador\%%D" mkdir "dist\BPS_Compensador\%%D"
 echo.
 echo Build terminado: dist\BPS_Compensador\BPS_Compensador.exe
