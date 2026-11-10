@@ -65,4 +65,4 @@ def process(input_path: Path, output_path: Path, payment_class: str | None = Non
             if combo: assign([payment] + combo, "DOM02_1AN", f"Un {payment_class} contra {len(combo)} facturas con vía de pago; misma sociedad y acreedor; diferencia <= {tolerance_cents} céntimos")
     write_matches(ws, headers, rows, assigned, match_type, reason, difference)
     stats = add_summary(workbook, "domiciliados", system, rows, assigned, match_type, [("Clase de pago utilizada", payment_class), ("Origen clase de pago", source), ("Tolerancia", f"{tolerance_cents} céntimos"), ("Máximo facturas por pago en búsqueda 1:N", max_invoices)])
-    stats.update(payment_class=payment_class, payment_class_source=source); workbook.save(output_path); return stats
+    stats.update(payment_class=payment_class, payment_class_source=source); workbook.save(output_path); workbook.close(); return stats

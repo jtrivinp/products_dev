@@ -25,4 +25,4 @@ def process(input_path: Path, classes_path: Path, output_path: Path) -> dict:
                 assign([first, second]); positive.remove(first); negative.remove(second)
     write_matches(ws, headers, rows, assigned, match_type, reason, difference)
     stats = add_summary(workbook, "masmenos", system, rows, assigned, match_type, [("Clases autorizadas utilizadas", ", ".join(sorted(allowed))), ("Nota", "Lista de prueba/parametrizable; sustituir por listado oficial de BPS para producción")])
-    stats["allowed_classes"] = sorted(allowed); workbook.save(output_path); return stats
+    stats["allowed_classes"] = sorted(allowed); workbook.save(output_path); workbook.close(); return stats

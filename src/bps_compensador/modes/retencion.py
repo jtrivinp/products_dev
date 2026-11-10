@@ -117,4 +117,5 @@ def process(input_path: Path, retention_path: Path, output_path: Path, day_windo
     stats = add_summary(workbook, "abiertas", system, rows, assigned, match_type, [("Indicadores sin parametrizar", ", ".join(sorted(unknown_codes)) or "Ninguno")])
     stats["unknown_retention_codes"] = sorted(unknown_codes)
     workbook.save(output_path)
+    workbook.close()
     return stats

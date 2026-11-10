@@ -25,7 +25,7 @@ def run_batch(settings, logger):
     with tempfile.TemporaryDirectory(prefix="bps-lote-") as temp:
         temp=Path(temp)
         for file_index, source in enumerate(files,1):
-            wb=load_workbook(source,read_only=True); headers=header_map(wb[wb.sheetnames[0]]); system=detect_system(headers)
+            wb=load_workbook(source,read_only=True); headers=header_map(wb[wb.sheetnames[0]]); system=detect_system(headers); wb.close()
             logger.info("Procesando %s (%s)",source.name,system)
             outputs=[]
             # Cascada confirmada: las propuestas se fusionan por primera coincidencia.
@@ -41,8 +41,10 @@ def run_batch(settings, logger):
                 for number, values in enumerate(ws.iter_rows(min_row=2,values_only=True),2):
                     if number not in proposals and h.get(OUT_CODIGO) and values[h[OUT_CODIGO]-1]:
                         proposals[number]={key: values[h[key]-1] if key in h else None for key in HELPERS}
+                owb.close()
             for number, values in enumerate(base_ws.iter_rows(min_row=2,values_only=True),2):
                 item=dict(zip(base_headers,values)); item.update({"FICHERO_ORIGEN":source.name,"SISTEMA_ORIGEN":system}); item.update(proposals.get(number,{})); rows.append(item)
+            base.close()
             archived = processed / f"{source.stem}_{run_id}{source.suffix}"
             shutil.move(str(source), str(archived))
     out=Workbook(); ws=out.active; ws.title="RESULTADOS_CONSOLIDADOS"; ordered=["FICHERO_ORIGEN","SISTEMA_ORIGEN"]+sorted(columns-{"FICHERO_ORIGEN","SISTEMA_ORIGEN"})+HELPERS
