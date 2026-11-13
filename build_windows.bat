@@ -33,6 +33,8 @@ if exist "%CONFIG_BACKUP%\config.ini" (
   if exist "config\auxiliares" xcopy /E /I /Y "config\auxiliares" "dist\BPS_Compensador\config\auxiliares" >nul
 )
 if exist "%CONFIG_BACKUP%" rmdir /S /Q "%CONFIG_BACKUP%"
+if not exist "dist\BPS_Compensador\config\auxiliares" mkdir "dist\BPS_Compensador\config\auxiliares"
+for %%F in ("config\auxiliares\*.xlsx") do if not exist "dist\BPS_Compensador\config\auxiliares\%%~nxF" copy /Y "%%F" "dist\BPS_Compensador\config\auxiliares\%%~nxF" >nul
 for %%D in (input output logs) do if not exist "dist\BPS_Compensador\%%D" mkdir "dist\BPS_Compensador\%%D"
 echo.
 echo Build terminado: dist\BPS_Compensador\BPS_Compensador.exe
