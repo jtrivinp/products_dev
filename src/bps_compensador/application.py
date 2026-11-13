@@ -12,10 +12,9 @@ def candidates(directory: Path) -> list[Path]: return sorted(p for p in director
 
 def run(settings: Settings) -> tuple[dict, Path, Path, Path]:
     validate(settings)
-    if not settings.auxiliary(settings.retentions_file).is_file():
-        raise ValueError(f"No se encuentra la tabla de retenciones: {settings.auxiliary(settings.retentions_file)}")
-    if not settings.auxiliary(settings.classes_file).is_file():
-        raise ValueError(f"No se encuentra la tabla de clases Más/Menos: {settings.auxiliary(settings.classes_file)}")
+    required = (settings.retentions_vip_file, settings.retentions_gpc_file, settings.classes_vip_file, settings.classes_gpc_file)
+    missing = [name for name in required if not settings.auxiliary(name).is_file()]
+    if missing: raise ValueError(f"Faltan ficheros auxiliares en {settings.aux_dir}: {', '.join(missing)}")
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     logger = configure(settings.log_dir, run_id)
     logger.info("Inicio de ejecución consolidada; versión %s", __version__)

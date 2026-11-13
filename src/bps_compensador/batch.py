@@ -29,9 +29,11 @@ def run_batch(settings, logger):
             logger.info("Procesando %s (%s)",source.name,system)
             outputs=[]
             # Cascada confirmada: las propuestas se fusionan por primera coincidencia.
-            outputs.append(process("masmenos",source,temp/f"{file_index}-mm.xlsx",clases=settings.auxiliary(settings.classes_file)))
+            classes_file = settings.classes_gpc_file if system == "GPC" else settings.classes_vip_file
+            retentions_file = settings.retentions_gpc_file if system == "GPC" else settings.retentions_vip_file
+            outputs.append(process("masmenos",source,temp/f"{file_index}-mm.xlsx",clases=settings.auxiliary(classes_file)))
             outputs.append(process("domiciliados",source,temp/f"{file_index}-dom.xlsx",clase_pago_domiciliado=settings.gpc_class if system=="GPC" else settings.vip_class,tolerancia_centimos=settings.tolerance_cents,max_facturas_domiciliado=settings.max_invoices))
-            outputs.append(process("abiertas",source,temp/f"{file_index}-ret.xlsx",retenciones=settings.auxiliary(settings.retentions_file),ventana_dias=settings.day_window,tolerancia_retencion_centimos=settings.retention_tolerance_cents))
+            outputs.append(process("abiertas",source,temp/f"{file_index}-ret.xlsx",retenciones=settings.auxiliary(retentions_file),ventana_dias=settings.day_window,tolerancia_retencion_centimos=settings.retention_tolerance_cents))
             total_groups += sum(x["groups"] for x in outputs)
             base=load_workbook(source,data_only=True,read_only=True); base_ws=base[base.sheetnames[0]]; base_headers=[str(c.value or "") for c in base_ws[1]]
             columns.update(base_headers)

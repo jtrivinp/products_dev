@@ -131,7 +131,7 @@ def load_retention_table(path: Path) -> Dict[str, float]:
     workbook = load_workbook(path, data_only=True, read_only=True)
     ws = workbook[workbook.sheetnames[0]]
     headers = {norm_text(cell.value).lower(): cell.column for cell in ws[1]}
-    code_col = next((col for name, col in headers.items() if name in {"indicador retención", "indicador retencion", "codigo retención", "codigo retencion", "código retención", "código retencion"}), None)
+    code_col = next((col for name, col in headers.items() if name in {"indicativo", "indicador retención", "indicador retencion", "codigo retención", "codigo retencion", "código retención", "código retencion"}), None)
     pct_col = next((col for name, col in headers.items() if name in {"porcentaje", "%", "% retención", "% retencion", "porcentaje retención", "porcentaje retencion"}), None)
     if not code_col or not pct_col:
         raise ValueError("La tabla de retenciones debe incluir 'Indicador retención' y 'Porcentaje'.")
